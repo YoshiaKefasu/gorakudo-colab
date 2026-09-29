@@ -10,7 +10,7 @@ T4 / L4 / A100 はフォールバック（int8自動切替）として後段に�
 
 1. ノートブックをColabにアップロード → ランタイムを **G4 GPU** にする
 2. セル1〜5を上から実行（GPU確認→ComfyUI取得→モデルDL約32GB→ワークフロー書出→起動+公開URL）
-3. セル6で1枚生成（`RESOLUTION` を1024/1280/1536/2048から選択）、セル7でバッチ連番生成→zip取得
+3. セル6で1枚生成（`RESOLUTION` を1024/1280/1536/2048から選択）、edit/inpaintを使う場合のみセル6.5で参照画像を登録、セル7でバッチ連番生成→zip取得
 
 G4（96GB）では **bf16フル精度・1536〜2048px・同一プロンプト10枚連番でも1〜2分**が目安。
 GUI（cloudflared公開URL）も使えるが、量産はセル6/7のAPI経路が速い。
@@ -45,8 +45,8 @@ A100≈14CU/h、G4はGCE換算で時間単価 数$/h級（構成依存・変動�
 
 - モデルDL: bf16経路で **約32〜33GB**（UNET 14.23 + TE-bf16 17.53 + VAE 0.68 + LoRA 0.32）、
   int8経路で **約17.6GB**。Colabのディスク（無料枠でも100GB級）で問題なし。
-  初回DLは `hf_transfer` 有効で数分〜十数分（回線依存）。2回目以降はスキップ判定ありだが、
-  Driveを使わない運用では**セッション切断で消える**ため毎回DLし直しになる点に注意。
+  初回DLは数分〜十数分（回線依存）。2回目以降はスキップ判定ありだが、
+  Driveを使わない運用では**セッション切断で消える**ため毎回DLし直しになる点に注意。（DLはcurl/wget）
 - 生成: 上の表の通り。G4+bf16+1024²で1枚8〜10秒（推定）。
 
 ## Driveを使わない運用 vs 使う場合の差分
@@ -63,15 +63,16 @@ A100≈14CU/h、G4はGCE換算で時間単価 数$/h級（構成依存・変動�
 1. **`QwenImage21Cache` ノードを入れない**: 新しいメモリ管理（aimdo malloc graph）と相性が悪く、
    `RuntimeError: aimdo memory compile error` が出ることがある。埋め込みワークフローは除去済み。
    GUIで自作WFを使う場合もこのノードは追加しないこと。
-2. **`--lowvram` の付け忘れ/付けすぎ**: 20GB未満（T4等）では必須、G4/A100では付けない。
-   セル1がVRAMから自動選択する。逆にするとOOMか無駄な低速化になる。
+2. **`--lowvram` は付けても付けなくてもほぼ変わらない**: このComfyUIは dynamic VRAM が既定で有効なため
+   `--lowvram` は実質ノーオペ。セル1がVRAMから自動選択するが、G4/A100では空・T4等では付与のまま動く。
 3. **cloudflaredのURLが出ない**: トンネル確立に1〜2分かかることがある。ログを見て待つ。
    何度も失敗する場合はランタイム再起動→セル5から再実行。
 4. **モデル名の一致**: ワークフロー内の `unet_name` / `clip_name` / `vae_name` / `lora_name` と
    DLしたファイル名が1文字でも違うとロード失敗。セル4のTEフォールバック差し替え以外は
    ファイル名を変えないこと。bf16系=int8系で `filename_prefix` のみ変えている。
-5. **T2I/Edit/Inpaintの使い分け**: T2Iはテキストのみ、Editは参照画像（`LoadImage`に参照を入れる）、
-   Inpaintはベース画像+マスク。GUIで使う場合は `workflows/` の対応JSONを読み込む。
+5. **T2I/Edit/Inpaintの使い分け**: T2Iはテキストのみ、Editは参照画像（セル6.5で登録）、
+   Inpaintはベース画像+マスク。セル4が書く `workflows/`（API形式）はGUIから読めない。
+   GUIで使うJSONは `user/default/workflows/`（セル4bの Main Workflow）のみ。
 6. **アイドル切断**: セル8はおまじない程度。長バッチは放置せず、終わったら即ダウンロードする。
 ## Main Workflow（自分のワークフロー）をColabで使う
 
@@ -85,8 +86,8 @@ ColabのGUI（cloudflaredのURL）を開き、**左サイドバーの「ワー�
 - モデル名は **そのランタイムに合わせて自動で差し替え**（bf16 / int8）
 - ローカルの最新版を反映したい時は、手元の
   `D:\OSS_ProgramFiles\ComfyUI\user\default\workflows\GoRakuDo Main Workflow.json`
-  を `tools/colab/GoRakuDo_Main_Workflow_cachefree.json` として作り直し、
-  `python fix_nb.py` を実行（ノートブックに再埋め込み）
+  を `tools/colab/GoRakuDo_Main_Workflow_cachefree.json` として作り直す。
+  （Note: **ipynbが正本。生成スクリプト（`build_colab_nb.py`/`fix_nb.py`）は参考用で再生成しない**）
 
 **方法B: GUIにドラッグ＆ドロップ**
 公開URLのComfyUI画面に、手元の `.json` を**そのままドロップ**しても読み込めます。
@@ -98,5 +99,22 @@ ColabのGUI（cloudflaredのURL）を開き、**左サイドバーの「ワー�
 
 ## つまずきポイント（追記）
 - `AttributeError: 'CompletedProcess' object has no attribute 'text'`
-  → 修正済み（`.stdout` を読む）。古いノートブックを持っている場合は `fix_nb.py` を実行
+  → 修正済み（`.stdout` を読む）
 - `if` の中に `!git clone` / `!wget` を書くと環境によって壊れる → `subprocess.run` に置換済み
+
+## セル6.5: 参照画像の登録（edit/inpaintを使う場合のみ）
+
+1. セル4→セル5の順に実行して `workflows/` とComfyUIの起動を済ませてからセル6.5を実行
+2. ファイル選択ダイアログで画像を1〜2枚アップロード（1枚なら参照・ベース兼用、2枚なら1枚目=参照・2枚目=ベース）
+3. `updated edit_*_api.json / inpaint_*_api.json` と出れば完了。**セル6/7はT2I専用。edit/inpaintは（参照を置換したAPI JSONを）GUIまたは別途APIで送る**
+
+`REPLACE_ME_REF.png` はedit系（`edit_*_api.json`）の参照画像の仮名、`REPLACE_ME_BASE.png` は
+inpaint系（`inpaint_*_api.json`）のベース画像の仮名。セル6.5が実ファイル名に置換する。
+T2I系は参照画像を使わないので対象外。画像なしで実行したらスキップ表示のまま次に進める。
+**2回目以降のアップロードは、既に置換済みのJSONには反映されない**（`REPLACE_ME_*` が残っていないとスキップ）。
+
+## 公開URLのセキュリティ注意
+
+- trycloudflareの公開URLは**認証なしでComfyUIのAPIを叩ける**。他人にURLを渡さないこと
+- 生成が終わったら必ずランタイムを停止（Colabメニュー → ランタイム → セッションの停止）
+- URLはセッションごとに変わる。使い回さず毎回セル5の出力から開くこと

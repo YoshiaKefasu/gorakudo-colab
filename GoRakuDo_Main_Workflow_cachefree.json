@@ -2,7 +2,7 @@
  "id": "e441d2d7-3c79-4a8a-8f6f-e97af47bcd44",
  "revision": 0,
  "last_node_id": 60,
- "last_link_id": 252,
+ "last_link_id": 254,
  "nodes": [
   {
    "id": 1,
@@ -503,7 +503,9 @@
      "localized_name": "モデル",
      "name": "MODEL",
      "type": "MODEL",
-     "links": null
+     "links": [
+      253
+     ]
     }
    ],
    "properties": {
@@ -635,10 +637,10 @@
    "title": "Note: T2I int8+Pruna",
    "properties": {},
    "widgets_values": [
-    "# T2I (int8 + Pruna 8step) — 推奨の基本形\n\nテキストから1024×1024画像を生成する、現行ベストのシンプル構成。\n\n## 推奨設定（変えないこと）\n- cfg **1.0**、`negative_prompt` は基本**空**\n- サイズ **1024×1024**（`EmptyLatentImage`）\n- シグマは Pruna 8step 固定9値\n  `1.0, 0.9333, 0.8571, 0.7692, 0.6667, 0.5455, 0.4, 0.2222, 0.0`\n- `ManualSigmas` を増減したら Pruna LoRA の前提が崩れる\n\n## モデル\n- UNet: `qwen_image_2.1_int8_convrot.safetensors`\n- LoRA: `p_qwen_image_2.1_8step_v0.1.safetensors` (strength **1.0**)\n- TextEncoder: `qwen3vl_8b_int8_convrot.safetensors` (type=qwen_image)\n- VAE: `qwen_image_2.1_vae_bf16.safetensors`\n\n## 使い方\n1. `TextEncodeQwenImage21` の `prompt` に本文を書く\n2. Queue する（VRAM 12GB のため**1ジョブずつ**）\n"
+    "# T2I (int8 + Pruna 8step) — 推奨の基本形\n\nテキストから1024×1024画像を生成する、現行ベストのシンプル構成。\n\n## 推奨設定（変えないこと）\n- T2Iチェーン: cfg **1.0**、`negative_prompt` は基本**空**、サイズ **1024×1024**（`EmptyLatentImage`）\n- T2Iチェーンのシグマは29値版（同梱の実態。Pruna 8stepの9値とは異なる。`ManualSigmas` を増減しないこと）\n- editチェーン（`SamplerCustom`#17）の cfg は **2**（変えないこと）\n\n## モデル（実行時にセル4bがこのランタイム用に差し替え）\n- UNet: bf16 / int8（実行時にセル4bが差し替え）\n- LoRA: `p_qwen_image_2.1_8step_v0.1.safetensors` (strength **1.0**)\n- TextEncoder: bf16 / int8（実行時にセル4bが差し替え、type=qwen_image）\n- VAE: `qwen_image_2.1_vae_bf16.safetensors`\n\n## 使い方\n1. `TextEncodeQwenImage21` の `prompt` に本文を書く\n2. Queue する（VRAM 12GB のため**1ジョブずつ**）\n"
    ],
    "widgets_values_named": {
-    "text": "# T2I (int8 + Pruna 8step) — 推奨の基本形\n\nテキストから1024×1024画像を生成する、現行ベストのシンプル構成。\n\n## 推奨設定（変えないこと）\n- cfg **1.0**、`negative_prompt` は基本**空**\n- サイズ **1024×1024**（`EmptyLatentImage`）\n- シグマは Pruna 8step 固定9値\n  `1.0, 0.9333, 0.8571, 0.7692, 0.6667, 0.5455, 0.4, 0.2222, 0.0`\n- `ManualSigmas` を増減したら Pruna LoRA の前提が崩れる\n\n## モデル\n- UNet: `qwen_image_2.1_int8_convrot.safetensors`\n- LoRA: `p_qwen_image_2.1_8step_v0.1.safetensors` (strength **1.0**)\n- TextEncoder: `qwen3vl_8b_int8_convrot.safetensors` (type=qwen_image)\n- VAE: `qwen_image_2.1_vae_bf16.safetensors`\n\n## 使い方\n1. `TextEncodeQwenImage21` の `prompt` に本文を書く\n2. Queue する（VRAM 12GB のため**1ジョブずつ**）\n"
+    "text": "# T2I (int8 + Pruna 8step) — 推奨の基本形\n\nテキストから1024×1024画像を生成する、現行ベストのシンプル構成。\n\n## 推奨設定（変えないこと）\n- T2Iチェーン: cfg **1.0**、`negative_prompt` は基本**空**、サイズ **1024×1024**（`EmptyLatentImage`）\n- T2Iチェーンのシグマは29値版（同梱の実態。Pruna 8stepの9値とは異なる。`ManualSigmas` を増減しないこと）\n- editチェーン（`SamplerCustom`#17）の cfg は **2**（変えないこと）\n\n## モデル（実行時にセル4bがこのランタイム用に差し替え）\n- UNet: bf16 / int8（実行時にセル4bが差し替え）\n- LoRA: `p_qwen_image_2.1_8step_v0.1.safetensors` (strength **1.0**)\n- TextEncoder: bf16 / int8（実行時にセル4bが差し替え、type=qwen_image）\n- VAE: `qwen_image_2.1_vae_bf16.safetensors`\n\n## 使い方\n1. `TextEncodeQwenImage21` の `prompt` に本文を書く\n2. Queue する（VRAM 12GB のため**1ジョブずつ**）\n"
    },
    "color": "#432",
    "bgcolor": "#653"
@@ -703,7 +705,7 @@
      "localized_name": "モデル",
      "name": "model",
      "type": "MODEL",
-     "link": null
+     "link": 254
     },
     {
      "localized_name": "ポジティブ",
@@ -1134,7 +1136,9 @@
      "localized_name": "モデル",
      "name": "MODEL",
      "type": "MODEL",
-     "links": null
+     "links": [
+      254
+     ]
     }
    ],
    "properties": {
@@ -1834,7 +1838,7 @@
      "localized_name": "モデル",
      "name": "model",
      "type": "MODEL",
-     "link": null
+     "link": 253
     },
     {
      "localized_name": "ポジティブ",
@@ -1926,106 +1930,6 @@
     "noise_seed": 777,
     "control_after_generate": "fixed",
     "cfg": 1
-   }
-  },
-  {
-   "id": 59,
-   "type": "ImageBlur",
-   "pos": [
-    -597.949765190262,
-    611.2864244208915
-   ],
-   "size": [
-    270,
-    82
-   ],
-   "flags": {},
-   "order": 17,
-   "mode": 0,
-   "inputs": [
-    {
-     "localized_name": "画像",
-     "name": "image",
-     "type": "IMAGE",
-     "link": null
-    },
-    {
-     "localized_name": "ブラーレイディウス",
-     "name": "blur_radius",
-     "type": "INT",
-     "widget": {
-      "name": "blur_radius"
-     },
-     "link": null
-    },
-    {
-     "localized_name": "シグマ",
-     "name": "sigma",
-     "type": "FLOAT",
-     "widget": {
-      "name": "sigma"
-     },
-     "link": null
-    }
-   ],
-   "outputs": [
-    {
-     "localized_name": "画像",
-     "name": "IMAGE",
-     "type": "IMAGE",
-     "links": [
-      250
-     ]
-    }
-   ],
-   "properties": {
-    "cnr_id": "comfy-core",
-    "ver": "0.37.0",
-    "Node name for S&R": "ImageBlur"
-   },
-   "widgets_values": [
-    1,
-    6
-   ],
-   "widgets_values_named": {
-    "blur_radius": 1,
-    "sigma": 6
-   }
-  },
-  {
-   "id": 60,
-   "type": "PreviewImage",
-   "pos": [
-    -276.85677573726764,
-    1019.602631741089
-   ],
-   "size": [
-    140,
-    26
-   ],
-   "flags": {},
-   "order": 23,
-   "mode": 0,
-   "inputs": [
-    {
-     "localized_name": "画像",
-     "name": "images",
-     "type": "IMAGE",
-     "link": 250
-    }
-   ],
-   "outputs": [
-    {
-     "localized_name": "images",
-     "name": "images",
-     "type": "IMAGE",
-     "links": null
-    }
-   ],
-   "properties": {
-    "cnr_id": "comfy-core",
-    "ver": "0.37.0",
-    "Node name for S&R": "PreviewImage"
    }
   }
  ],
@@ -2199,14 +2103,6 @@
    "SIGMAS"
   ],
   [
-   250,
-   59,
-   0,
-   60,
-   0,
-   "IMAGE"
-  ],
-  [
    252,
    43,
    0,
@@ -2237,6 +2133,22 @@
    40,
    1,
    "IMAGE"
+  ],
+  [
+   253,
+   9,
+   0,
+   55,
+   0,
+   "MODEL"
+  ],
+  [
+   254,
+   24,
+   0,
+   17,
+   0,
+   "MODEL"
   ]
  ],
  "groups": [],
