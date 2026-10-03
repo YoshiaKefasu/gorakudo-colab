@@ -143,20 +143,22 @@ T2I系は参照画像を使わないので対象外。画像なしで実行し�
 - フォールバックURLはセッションごとに変わる。使い回さず毎回セル5の出力から開くこと
   （Tailscale IPは同一ホスト名なら再取得でも同じことが多い）
 
-## セル5: 接続切替（tailscale推奨 / cloudflared・ngrokはフォールバック）
+## セル5: 接続切替（tailscale推奨 / pinggy・cloudflared・ngrokはフォールバック）
 
 既定は `'tailscale'`（変えなくてよい）。Tailscaleが使えない環境でのみセル5先頭で切替える：
 
 ```python
-TUNNEL_PROVIDER = 'cloudflared'   # または 'ngrok'
+TUNNEL_PROVIDER = 'pinggy'   # または 'cloudflared' / 'ngrok'
 NGROK_AUTHTOKEN = 'あなたのauthtoken'   # ngrokの場合のみ。ダッシュボード → Your Authtokenをコピー
 NGROK_DOMAIN    = 'grkd-colab.ngrok-free.app'  # 無料の固定ドメイン。空なら毎回ランダム
 ```
 
-- `'tailscale'` → `'cloudflared'` / `'ngrok'` に変えるだけで以降は同じ
+- `'tailscale'` → `'pinggy'` / `'cloudflared'` / `'ngrok'` に変えるだけで以降は同じ
   （`start_tunnel()`／ウォッチドッグ／監視ループ／`RUN_TOKEN`はそのまま流用。URLは`PUBLIC_URL`に入る）。
 - **ngrok注意: 無料枠は月間1GB上限で、画像を数枚流すとすぐ死ぬ**。使うなら固定ドメイン推奨。
 - cloudflaredのquick tunnelは無料・無制限だが読み込みが遅いことがある。
+- **pinggy: SSHリモートフォワード（TCP）・帯域無制限・登録不要**。UDP経路が壊れた環境向け。
+  無料枠は60分で切れるがウォッチドッグが自動で張り直す（URLは変わる）。
 - バイナリは公式zipを直接取得（`pip install pyngrok`は使わない）。URLはngrokローカルAPI
   （`http://127.0.0.1:4040/api/tunnels`の`public_url`）から取る。
 - **authtokenを入れたノートブックはそのまま共有しない**こと（トークンはあなたの金庫扱い）。
