@@ -1,0 +1,901 @@
+{
+ "last_node_id": 24,
+ "last_link_id": 123,
+ "nodes": [
+  {
+   "id": 1,
+   "type": "UNETLoader",
+   "pos": [
+    0,
+    0
+   ],
+   "size": [
+    320,
+    200
+   ],
+   "flags": {},
+   "order": 0,
+   "mode": 0,
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "MODEL",
+     "type": "MODEL",
+     "links": [
+      111
+     ]
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "UNETLoader"
+   },
+   "widgets_values": [
+    "qwen_image_2.1_int8_convrot.safetensors",
+    "default"
+   ]
+  },
+  {
+   "id": 2,
+   "type": "CLIPLoader",
+   "pos": [
+    0,
+    230
+   ],
+   "size": [
+    320,
+    200
+   ],
+   "flags": {},
+   "order": 1,
+   "mode": 0,
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "CLIP",
+     "type": "CLIP",
+     "links": [
+      101,
+      112
+     ]
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "CLIPLoader"
+   },
+   "widgets_values": [
+    "qwen3vl_8b_int8_convrot.safetensors",
+    "qwen_image",
+    null
+   ]
+  },
+  {
+   "id": 3,
+   "type": "VAELoader",
+   "pos": [
+    0,
+    460
+   ],
+   "size": [
+    320,
+    200
+   ],
+   "flags": {},
+   "order": 2,
+   "mode": 0,
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "VAE",
+     "type": "VAE",
+     "links": [
+      109,
+      113,
+      122
+     ]
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "VAELoader"
+   },
+   "widgets_values": [
+    "qwen_image_2.1_vae_bf16.safetensors"
+   ]
+  },
+  {
+   "id": 4,
+   "type": "TextEncodeQwenImage21",
+   "pos": [
+    420,
+    0
+   ],
+   "size": [
+    320,
+    200
+   ],
+   "flags": {},
+   "order": 7,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "clip",
+     "type": "CLIP",
+     "link": 101
+    },
+    {
+     "name": "vae",
+     "type": "VAE",
+     "link": null
+    }
+   ],
+   "outputs": [
+    {
+     "name": "positive",
+     "type": "CONDITIONING",
+     "links": [
+      105
+     ]
+    },
+    {
+     "name": "negative",
+     "type": "CONDITIONING",
+     "links": [
+      104
+     ]
+    },
+    {
+     "name": "latent",
+     "type": "LATENT",
+     "links": null
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "TextEncodeQwenImage21"
+   },
+   "widgets_values": [
+    "REPLACE_ME_PROMPT",
+    "",
+    1024
+   ]
+  },
+  {
+   "id": 5,
+   "type": "EmptyLatentImage",
+   "pos": [
+    0,
+    690
+   ],
+   "size": [
+    320,
+    200
+   ],
+   "flags": {},
+   "order": 3,
+   "mode": 0,
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "LATENT",
+     "type": "LATENT",
+     "links": [
+      102
+     ]
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "EmptyLatentImage"
+   },
+   "widgets_values": [
+    1024,
+    1024,
+    1
+   ]
+  },
+  {
+   "id": 6,
+   "type": "SamplerCustom",
+   "pos": [
+    840,
+    0
+   ],
+   "size": [
+    320,
+    200
+   ],
+   "flags": {},
+   "order": 9,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "model",
+     "type": "MODEL",
+     "link": 103
+    },
+    {
+     "name": "positive",
+     "type": "CONDITIONING",
+     "link": 105
+    },
+    {
+     "name": "negative",
+     "type": "CONDITIONING",
+     "link": 104
+    },
+    {
+     "name": "sampler",
+     "type": "SAMPLER",
+     "link": 106
+    },
+    {
+     "name": "sigmas",
+     "type": "SIGMAS",
+     "link": 107
+    },
+    {
+     "name": "latent_image",
+     "type": "LATENT",
+     "link": 102
+    }
+   ],
+   "outputs": [
+    {
+     "name": "output",
+     "type": "LATENT",
+     "links": [
+      108
+     ]
+    },
+    {
+     "name": "denoised_output",
+     "type": "LATENT",
+     "links": null
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "SamplerCustom"
+   },
+   "widgets_values": [
+    true,
+    0,
+    1.0
+   ]
+  },
+  {
+   "id": 7,
+   "type": "VAEDecode",
+   "pos": [
+    1260,
+    0
+   ],
+   "size": [
+    320,
+    200
+   ],
+   "flags": {},
+   "order": 10,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "samples",
+     "type": "LATENT",
+     "link": 108
+    },
+    {
+     "name": "vae",
+     "type": "VAE",
+     "link": 109
+    }
+   ],
+   "outputs": [
+    {
+     "name": "IMAGE",
+     "type": "IMAGE",
+     "links": [
+      110,
+      114
+     ]
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "VAEDecode"
+   },
+   "widgets_values": []
+  },
+  {
+   "id": 8,
+   "type": "SaveImage",
+   "pos": [
+    1680,
+    0
+   ],
+   "size": [
+    320,
+    200
+   ],
+   "flags": {},
+   "order": 11,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "images",
+     "type": "IMAGE",
+     "link": 110
+    }
+   ],
+   "outputs": [
+    {
+     "name": "images",
+     "type": "IMAGE",
+     "links": null
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "SaveImage"
+   },
+   "widgets_values": [
+    "gorakudo/cmp_int8_pruna_s8"
+   ]
+  },
+  {
+   "id": 9,
+   "type": "LoraLoaderModelOnly",
+   "pos": [
+    420,
+    230
+   ],
+   "size": [
+    320,
+    200
+   ],
+   "flags": {},
+   "order": 8,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "model",
+     "type": "MODEL",
+     "link": 111
+    }
+   ],
+   "outputs": [
+    {
+     "name": "MODEL",
+     "type": "MODEL",
+     "links": [
+      103,
+      116
+     ]
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "LoraLoaderModelOnly"
+   },
+   "widgets_values": [
+    "p_qwen_image_2.1_8step_v0.1.safetensors",
+    1.0
+   ]
+  },
+  {
+   "id": 10,
+   "type": "ManualSigmas",
+   "pos": [
+    0,
+    920
+   ],
+   "size": [
+    320,
+    200
+   ],
+   "flags": {},
+   "order": 4,
+   "mode": 0,
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "SIGMAS",
+     "type": "SIGMAS",
+     "links": [
+      107,
+      120
+     ]
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "ManualSigmas"
+   },
+   "widgets_values": [
+    "1.0, 0.9333333333333333, 0.8571428571428571, 0.7692307692307693, 0.6666666666666666, 0.5454545454545454, 0.4, 0.2222222222222222, 0.0"
+   ]
+  },
+  {
+   "id": 11,
+   "type": "KSamplerSelect",
+   "pos": [
+    0,
+    1150
+   ],
+   "size": [
+    320,
+    200
+   ],
+   "flags": {},
+   "order": 5,
+   "mode": 0,
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "SAMPLER",
+     "type": "SAMPLER",
+     "links": [
+      106,
+      119
+     ]
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "KSamplerSelect"
+   },
+   "widgets_values": [
+    "euler"
+   ]
+  },
+  {
+   "id": 12,
+   "type": "RandomNoise",
+   "pos": [
+    0,
+    1380
+   ],
+   "size": [
+    320,
+    200
+   ],
+   "flags": {},
+   "order": 6,
+   "mode": 0,
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "NOISE",
+     "type": "NOISE",
+     "links": null
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "RandomNoise"
+   },
+   "widgets_values": [
+    0
+   ]
+  },
+  {
+   "id": 20,
+   "type": "TextEncodeQwenImage21",
+   "pos": [
+    1680,
+    230
+   ],
+   "size": [
+    320,
+    200
+   ],
+   "flags": {},
+   "order": 12,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "clip",
+     "type": "CLIP",
+     "link": 112
+    },
+    {
+     "name": "image_1",
+     "type": "*",
+     "link": 114
+    },
+    {
+     "name": "vae",
+     "type": "VAE",
+     "link": 113
+    }
+   ],
+   "outputs": [
+    {
+     "name": "positive",
+     "type": "CONDITIONING",
+     "links": [
+      118
+     ]
+    },
+    {
+     "name": "negative",
+     "type": "CONDITIONING",
+     "links": [
+      117
+     ]
+    },
+    {
+     "name": "latent",
+     "type": "LATENT",
+     "links": [
+      115
+     ]
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "TextEncodeQwenImage21"
+   },
+   "widgets_values": [
+    "REPLACE_ME_PROMPT_PASS2",
+    "",
+    1024
+   ]
+  },
+  {
+   "id": 21,
+   "type": "SamplerCustom",
+   "pos": [
+    2100,
+    0
+   ],
+   "size": [
+    320,
+    200
+   ],
+   "flags": {},
+   "order": 13,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "model",
+     "type": "MODEL",
+     "link": 116
+    },
+    {
+     "name": "positive",
+     "type": "CONDITIONING",
+     "link": 118
+    },
+    {
+     "name": "negative",
+     "type": "CONDITIONING",
+     "link": 117
+    },
+    {
+     "name": "sampler",
+     "type": "SAMPLER",
+     "link": 119
+    },
+    {
+     "name": "sigmas",
+     "type": "SIGMAS",
+     "link": 120
+    },
+    {
+     "name": "latent_image",
+     "type": "LATENT",
+     "link": 115
+    }
+   ],
+   "outputs": [
+    {
+     "name": "output",
+     "type": "LATENT",
+     "links": [
+      121
+     ]
+    },
+    {
+     "name": "denoised_output",
+     "type": "LATENT",
+     "links": null
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "SamplerCustom"
+   },
+   "widgets_values": [
+    true,
+    777,
+    1.0
+   ]
+  },
+  {
+   "id": 22,
+   "type": "VAEDecode",
+   "pos": [
+    2520,
+    0
+   ],
+   "size": [
+    320,
+    200
+   ],
+   "flags": {},
+   "order": 14,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "samples",
+     "type": "LATENT",
+     "link": 121
+    },
+    {
+     "name": "vae",
+     "type": "VAE",
+     "link": 122
+    }
+   ],
+   "outputs": [
+    {
+     "name": "IMAGE",
+     "type": "IMAGE",
+     "links": [
+      123
+     ]
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "VAEDecode"
+   },
+   "widgets_values": []
+  },
+  {
+   "id": 23,
+   "type": "SaveImage",
+   "pos": [
+    2940,
+    0
+   ],
+   "size": [
+    320,
+    200
+   ],
+   "flags": {},
+   "order": 15,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "images",
+     "type": "IMAGE",
+     "link": 123
+    }
+   ],
+   "outputs": [
+    {
+     "name": "images",
+     "type": "IMAGE",
+     "links": null
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "SaveImage"
+   },
+   "widgets_values": [
+    "gorakudo/t2i_edit2pass"
+   ]
+  },
+  {
+   "id": 24,
+   "type": "MarkdownNote",
+   "pos": [
+    0,
+    1700
+   ],
+   "size": [
+    480,
+    320
+   ],
+   "flags": {},
+   "order": 16,
+   "mode": 0,
+   "inputs": [],
+   "outputs": [],
+   "title": "Note",
+   "properties": {},
+   "widgets_values": [
+    "## GoRakuDo - T2I → Edit（2パス）\n\n**パス1**（Text Encode Qwen Image 2.1 → カスタムサンプラー）で絵を作り、\n**パス2**（下段の Text Encode + カスタムサンプラー）がその絵を受け取って**追加の修正**をする。\n\n- 上のプロンプト欄：最初の生成（キャラ・構図）\n- **下のプロンプト欄：修正指示**（例: `remove the duplicated extra necklace chain, keep everything else exactly the same, 2D anime illustration`）\n- パス2は**空のlatentではなく参照latent**を使うので、元の絵を保ったまま変更点だけ描き直す\n\n**触らない設定**（Pruna 8step の前提）\n- cfg = **1.0** / ネガティブは**空** / 1024×1024\n- マニュアルシグマの9値（8ステップ）/ LoRA強度 1.0\n\n所要時間の目安: パス1 約80秒 ＋ パス2 約80秒 ＝ **約160秒**\n"
+   ],
+   "widgets_values_named": {
+    "text": "## GoRakuDo - T2I → Edit（2パス）\n\n**パス1**（Text Encode Qwen Image 2.1 → カスタムサンプラー）で絵を作り、\n**パス2**（下段の Text Encode + カスタムサンプラー）がその絵を受け取って**追加の修正**をする。\n\n- 上のプロンプト欄：最初の生成（キャラ・構図）\n- **下のプロンプト欄：修正指示**（例: `remove the duplicated extra necklace chain, keep everything else exactly the same, 2D anime illustration`）\n- パス2は**空のlatentではなく参照latent**を使うので、元の絵を保ったまま変更点だけ描き直す\n\n**触らない設定**（Pruna 8step の前提）\n- cfg = **1.0** / ネガティブは**空** / 1024×1024\n- マニュアルシグマの9値（8ステップ）/ LoRA強度 1.0\n\n所要時間の目安: パス1 約80秒 ＋ パス2 約80秒 ＝ **約160秒**\n"
+   }
+  }
+ ],
+ "links": [
+  [
+   101,
+   2,
+   0,
+   4,
+   0,
+   "CLIP"
+  ],
+  [
+   102,
+   5,
+   0,
+   6,
+   5,
+   "LATENT"
+  ],
+  [
+   103,
+   9,
+   0,
+   6,
+   0,
+   "MODEL"
+  ],
+  [
+   104,
+   4,
+   1,
+   6,
+   2,
+   "CONDITIONING"
+  ],
+  [
+   105,
+   4,
+   0,
+   6,
+   1,
+   "CONDITIONING"
+  ],
+  [
+   106,
+   11,
+   0,
+   6,
+   3,
+   "SAMPLER"
+  ],
+  [
+   107,
+   10,
+   0,
+   6,
+   4,
+   "SIGMAS"
+  ],
+  [
+   108,
+   6,
+   0,
+   7,
+   0,
+   "LATENT"
+  ],
+  [
+   109,
+   3,
+   0,
+   7,
+   1,
+   "VAE"
+  ],
+  [
+   110,
+   7,
+   0,
+   8,
+   0,
+   "IMAGE"
+  ],
+  [
+   111,
+   1,
+   0,
+   9,
+   0,
+   "MODEL"
+  ],
+  [
+   112,
+   2,
+   0,
+   20,
+   0,
+   "CLIP"
+  ],
+  [
+   113,
+   3,
+   0,
+   20,
+   2,
+   "VAE"
+  ],
+  [
+   114,
+   7,
+   0,
+   20,
+   1,
+   "IMAGE"
+  ],
+  [
+   115,
+   20,
+   2,
+   21,
+   5,
+   "LATENT"
+  ],
+  [
+   116,
+   9,
+   0,
+   21,
+   0,
+   "MODEL"
+  ],
+  [
+   117,
+   20,
+   1,
+   21,
+   2,
+   "CONDITIONING"
+  ],
+  [
+   118,
+   20,
+   0,
+   21,
+   1,
+   "CONDITIONING"
+  ],
+  [
+   119,
+   11,
+   0,
+   21,
+   3,
+   "SAMPLER"
+  ],
+  [
+   120,
+   10,
+   0,
+   21,
+   4,
+   "SIGMAS"
+  ],
+  [
+   121,
+   21,
+   0,
+   22,
+   0,
+   "LATENT"
+  ],
+  [
+   122,
+   3,
+   0,
+   22,
+   1,
+   "VAE"
+  ],
+  [
+   123,
+   22,
+   0,
+   23,
+   0,
+   "IMAGE"
+  ]
+ ],
+ "groups": [],
+ "config": {},
+ "extra": {
+  "ds": {
+   "scale": 1.0,
+   "offset": [
+    0,
+    0
+   ]
+  }
+ },
+ "version": 1
+}

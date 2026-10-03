@@ -6,14 +6,35 @@ T4 / L4 / A100 はフォールバック（int8自動切替）として後段に�
 > ※ Colab実機での実行は未検証。JSON構造・構文・モデルURL到達性のみ検証済み。
 > 数値はすべて**推定**。料金は変動が大きいので実行前に公式ページで確認すること。
 
+## 推奨接続方式: Tailscale（最速・通信量無制限・P2Pダイレクト暗号化）
+
+セル5の既定は `'tailscale'`。中継サーバー（Cloudflare/ngrok）を挟まない WireGuard P2P直結で、
+**完全無料・通信量無制限・最速・固定IP（`http://100.x.y.z:8188`）**。ngrok（月間1GB上限ですぐ死ぬ）や
+cloudflared（低速）はフォールバックとして残してあるが、まずはTailscaleを使うこと。
+
+**3分で終わる手順:**
+
+1. [tailscale.com](https://tailscale.com/) で無料登録 → PCにWindowsアプリを入れてログイン
+2. 管理画面 **Settings > Keys** で Auth Key を生成（**Ephemeral**推奨・使い捨て）
+   → https://login.tailscale.com/admin/settings/keys
+3. Colab セル5先頭の `TAILSCALE_AUTHKEY` に貼って実行（`TAILSCALE_HOSTNAME = 'colab-g4'` のまま）
+4. 出た IP（例: `http://100.120.200.30:8188`）でローカルブリッジ起動:
+   `python tools\remote-bridge.py --remote http://100.x.y.z:8188`
+   （PCも同じTailscaleアカウントでログインしておくこと）
+
+セル5は接続後に**そのまま監視ループに入る**（`STAY_ALIVE = True`）。15秒ごとの状態行が出続け、
+アイドル切断を防ぐ。他セル（6/7）を実行したい時は ■（停止）で抜ける。
+ComfyUIとTailscaleは別プロセスなので動き続ける。
+
 ## G4での使い方（3ステップ）
 
 1. ノートブックをColabにアップロード → ランタイムを **G4 GPU** にする
-2. セル1〜5を上から実行（GPU確認→ComfyUI取得→モデルDL約32GB→ワークフロー書出→起動+公開URL）
+2. セル1〜5を上から実行（GPU確認→ComfyUI取得→モデルDL約32GB→ワークフロー書出→起動+Tailscale公開URL）
+   ※セル5実行前に `TAILSCALE_AUTHKEY` を入れること（上記）
 3. セル6で1枚生成（`RESOLUTION` を1024/1280/1536/2048から選択）、edit/inpaintを使う場合のみセル6.5で参照画像を登録、セル7でバッチ連番生成→zip取得
 
 G4（96GB）では **bf16フル精度・1536〜2048px・同一プロンプト10枚連番でも1〜2分**が目安。
-GUI（cloudflared公開URL）も使えるが、量産はセル6/7のAPI経路が速い。
+GUI（ローカルブリッジ経由 http://127.0.0.1:8188）も使えるが、量産はセル6/7のAPI経路が速い。
 
 ## GPU別 見積り表（すべて推定）
 
@@ -79,7 +100,7 @@ A100≈14CU/h、G4はGCE換算で時間単価 数$/h級（構成依存・変動�
 **方法A: ノートブックに同梱済み（推奨）**
 `セル4b` を実行すると、ローカルの `GoRakuDo Main Workflow` が
 `/content/ComfyUI/user/default/workflows/` に書き出されます。
-ColabのGUI（cloudflaredのURL）を開き、**左サイドバーの「ワークフロー」一覧**から選ぶだけ。
+ローカルのブリッジ経由GUI（http://127.0.0.1:8188）を開き、**左サイドバーの「ワークフロー」一覧**から選ぶだけ。
 
 - この同梱版は **`QwenImage21Cache` を2つとも除去して配線し直してあります**
   （`aimdo memory compile error` を避けるため）
@@ -115,9 +136,34 @@ T2I系は参照画像を使わないので対象外。画像なしで実行し�
 
 ## 公開URLのセキュリティ注意
 
-- trycloudflareの公開URLは**認証なしでComfyUIのAPIを叩ける**。他人にURLを渡さないこと
+- TailscaleのIPは**あなたのTailnet内からのみ到達可能**（Tailnet外には見えない）。それでも使い終わったら
+  Colabのランタイムを停止すること（Ephemeralキーはノードを自動削除するが、停止が確実）
+- trycloudflare / ngrokの公開URLは**認証なしでComfyUIのAPIを叩ける**。他人にURLを渡さないこと
 - 生成が終わったら必ずランタイムを停止（Colabメニュー → ランタイム → セッションの停止）
-- URLはセッションごとに変わる。使い回さず毎回セル5の出力から開くこと## 公開URLが開けなくなったとき / セッションが切れたとき
+- フォールバックURLはセッションごとに変わる。使い回さず毎回セル5の出力から開くこと
+  （Tailscale IPは同一ホスト名なら再取得でも同じことが多い）
+
+## セル5: 接続切替（tailscale推奨 / cloudflared・ngrokはフォールバック）
+
+既定は `'tailscale'`（変えなくてよい）。Tailscaleが使えない環境でのみセル5先頭で切替える：
+
+```python
+TUNNEL_PROVIDER = 'cloudflared'   # または 'ngrok'
+NGROK_AUTHTOKEN = 'あなたのauthtoken'   # ngrokの場合のみ。ダッシュボード → Your Authtokenをコピー
+NGROK_DOMAIN    = 'grkd-colab.ngrok-free.app'  # 無料の固定ドメイン。空なら毎回ランダム
+```
+
+- `'tailscale'` → `'cloudflared'` / `'ngrok'` に変えるだけで以降は同じ
+  （`start_tunnel()`／ウォッチドッグ／監視ループ／`RUN_TOKEN`はそのまま流用。URLは`PUBLIC_URL`に入る）。
+- **ngrok注意: 無料枠は月間1GB上限で、画像を数枚流すとすぐ死ぬ**。使うなら固定ドメイン推奨。
+- cloudflaredのquick tunnelは無料・無制限だが読み込みが遅いことがある。
+- バイナリは公式zipを直接取得（`pip install pyngrok`は使わない）。URLはngrokローカルAPI
+  （`http://127.0.0.1:4040/api/tunnels`の`public_url`）から取る。
+- **authtokenを入れたノートブックはそのまま共有しない**こと（トークンはあなたの金庫扱い）。
+  共有する時は値を空に戻す。
+- **固定ドメイン（無料枠で1つ）を使えばURLが変わらない**ので、ブリッジの`--url-file`更新も不要になる。
+- ブリッジ側は`--remote https://<ngrokのURL>`で起動するだけ（警告ページ回避ヘッダは自動付与）。
+  詳しくは `tools/README-remote-bridge.md` の「ngrokで使う」を参照。## 公開URLが開けなくなったとき / セッションが切れたとき
 
 **症状**: ブラウザで `https://xxxxx.trycloudflare.com` を開くと **403**（Cloudflareのエラーページ）／
 または「開けなくなった」。
@@ -161,8 +207,10 @@ Colabは**操作がないとセッションを落とす**ため、セル5 はURL
   （`ComfyUI OK | VRAM x/y GB | 実行中 n / 待機 m | トンネル 生存 | https://...`）
 - **■（停止）で抜けられる**。抜けても ComfyUI と トンネルは別プロセスなので**動き続ける**
 - ループ中は他のセルを実行できないが、**ローカル・ブリッジ（tools/remote-bridge.py）経由なら生成できる**
-- このカーネルからセル6/7 を動かしたいときだけ先頭の `STAY_ALIVE = False` にして、
-  代わりに**セル9**を実行して維持する
+- **既定は `STAY_ALIVE = False`**（＝セル5は終了する）。こうしないと**他のセルが実行できない**
+  （ngrok切替・セル6/7・セル8が詰まる。実際にこの問題が起きた）
+- セッション維持は **セル8（ブラウザ側キープアライブ）** がおすすめ。カーネルを塞がずにアイドル切断を防げる
+- ブラウザを開けない状況でのみ `STAY_ALIVE = True`（またはセル9）でループさせる
 
 ## セル5を再実行したときの注意（v: 2026-09-30 修正済み）
 
@@ -181,3 +229,26 @@ Colabは**操作がないとセッションを落とす**ため、セル5 はURL
   ※`/content` が消えるのでモデルの再DL（G4なら数分）が必要
 - 応急処置: 修正版を読み込み直してセル5を再実行。**セル5が最後に表示したURL**を使う
   （古いスレッドが別のURLを出していても無視してよい）
+
+## セル4c: ローカルのワークフロー群を取り込む
+
+**なぜ必要か**: ブリッジ（`tools/remote-bridge.py`）で見ているGUIは**リモート（Colab）のComfyUI**そのもの。
+つまり**ワークフロー一覧・モデル一覧・サーバ側設定はリモートのもの**で、ローカルの
+`user/default/workflows/` は**そのままでは出てきません**。
+
+**やること**: ローカルのワークフローを `gorakudo-colab` リポジトリの `workflows/` に置いておき、
+**セル4c** を実行すると
+1. GitHub APIで一覧を取得 → `user/default/workflows/` に配置（モデル名はMODEに合わせて差し替え）
+2. `_comfy.settings.json`（ローカルのサーバ側設定）もコピー
+
+配置されるもの（ローカルと同じ8本）:
+- `GoRakuDo Main Workflow.json`（QwenImage21Cache は除去済み）
+- `GoRakuDo - T2I int8+Pruna.json` / `Edit` / `Edit (10 refs)` / `Inpaint int8`
+- `GoRakuDo - T2I + Edit 2pass int8+Pruna.json` / Q4版2本
+
+**注意**
+- **ブラウザ側の設定**（テーマ・リンク表示・プレビュー方法など）は `localStorage` に
+  **オリジン単位**（`http://127.0.0.1:8188`）で保存されるため、ブリッジ経由でも**そのまま効きます**
+- 逆に**サーバ側の設定**（`user/default/comfy.settings.json`）はリモートのもの → セル4cで同期
+- **カスタムノード**はリモートに入っているものだけ（GGUFを使うならセル2b）
+- フロントエンドのバージョンはリモートのComfyUIに従う（ノートブックは v0.37.4 を取得）

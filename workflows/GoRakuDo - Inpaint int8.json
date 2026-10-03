@@ -1,0 +1,616 @@
+{
+ "last_node_id": 15,
+ "last_link_id": 116,
+ "nodes": [
+  {
+   "id": 1,
+   "type": "UNETLoader",
+   "pos": [
+    0,
+    0
+   ],
+   "size": [
+    320,
+    200
+   ],
+   "flags": {},
+   "order": 0,
+   "mode": 0,
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "MODEL",
+     "type": "MODEL",
+     "links": [
+      105
+     ]
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "UNETLoader"
+   },
+   "widgets_values": [
+    "qwen_image_2.1_int8_convrot.safetensors",
+    "default"
+   ]
+  },
+  {
+   "id": 2,
+   "type": "CLIPLoader",
+   "pos": [
+    0,
+    230
+   ],
+   "size": [
+    320,
+    200
+   ],
+   "flags": {},
+   "order": 1,
+   "mode": 0,
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "CLIP",
+     "type": "CLIP",
+     "links": [
+      101
+     ]
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "CLIPLoader"
+   },
+   "widgets_values": [
+    "qwen3vl_8b_int8_convrot.safetensors",
+    "qwen_image",
+    null
+   ]
+  },
+  {
+   "id": 3,
+   "type": "VAELoader",
+   "pos": [
+    0,
+    460
+   ],
+   "size": [
+    320,
+    200
+   ],
+   "flags": {},
+   "order": 2,
+   "mode": 0,
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "VAE",
+     "type": "VAE",
+     "links": [
+      102,
+      109,
+      115
+     ]
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "VAELoader"
+   },
+   "widgets_values": [
+    "qwen_image_2.1_vae_bf16.safetensors"
+   ]
+  },
+  {
+   "id": 4,
+   "type": "TextEncodeQwenImage21",
+   "pos": [
+    420,
+    0
+   ],
+   "size": [
+    320,
+    200
+   ],
+   "flags": {},
+   "order": 4,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "clip",
+     "type": "CLIP",
+     "link": 101
+    },
+    {
+     "name": "image_1",
+     "type": "*",
+     "link": 103
+    },
+    {
+     "name": "vae",
+     "type": "VAE",
+     "link": 102
+    }
+   ],
+   "outputs": [
+    {
+     "name": "positive",
+     "type": "CONDITIONING",
+     "links": [
+      107
+     ]
+    },
+    {
+     "name": "negative",
+     "type": "CONDITIONING",
+     "links": [
+      106
+     ]
+    },
+    {
+     "name": "latent",
+     "type": "LATENT",
+     "links": null
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "TextEncodeQwenImage21"
+   },
+   "widgets_values": [
+    "REPLACE_ME_PROMPT",
+    "",
+    1024
+   ]
+  },
+  {
+   "id": 6,
+   "type": "KSamplerAdvanced",
+   "pos": [
+    1260,
+    0
+   ],
+   "size": [
+    320,
+    200
+   ],
+   "flags": {},
+   "order": 9,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "model",
+     "type": "MODEL",
+     "link": 105
+    },
+    {
+     "name": "positive",
+     "type": "CONDITIONING",
+     "link": 107
+    },
+    {
+     "name": "negative",
+     "type": "CONDITIONING",
+     "link": 106
+    },
+    {
+     "name": "latent_image",
+     "type": "LATENT",
+     "link": 104
+    }
+   ],
+   "outputs": [
+    {
+     "name": "LATENT",
+     "type": "LATENT",
+     "links": [
+      108
+     ]
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "KSamplerAdvanced"
+   },
+   "widgets_values": [
+    "enable",
+    0,
+    25,
+    1,
+    "euler",
+    "simple",
+    0,
+    10000,
+    "disable"
+   ]
+  },
+  {
+   "id": 7,
+   "type": "VAEDecode",
+   "pos": [
+    1680,
+    0
+   ],
+   "size": [
+    320,
+    200
+   ],
+   "flags": {},
+   "order": 10,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "samples",
+     "type": "LATENT",
+     "link": 108
+    },
+    {
+     "name": "vae",
+     "type": "VAE",
+     "link": 109
+    }
+   ],
+   "outputs": [
+    {
+     "name": "IMAGE",
+     "type": "IMAGE",
+     "links": [
+      110
+     ]
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "VAEDecode"
+   },
+   "widgets_values": []
+  },
+  {
+   "id": 8,
+   "type": "SaveImage",
+   "pos": [
+    2100,
+    0
+   ],
+   "size": [
+    320,
+    200
+   ],
+   "flags": {},
+   "order": 11,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "images",
+     "type": "IMAGE",
+     "link": 110
+    }
+   ],
+   "outputs": [
+    {
+     "name": "images",
+     "type": "IMAGE",
+     "links": null
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "SaveImage"
+   },
+   "widgets_values": [
+    "gorakudo/inpaint"
+   ]
+  },
+  {
+   "id": 9,
+   "type": "LoadImage",
+   "pos": [
+    0,
+    690
+   ],
+   "size": [
+    320,
+    200
+   ],
+   "flags": {},
+   "order": 3,
+   "mode": 0,
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "IMAGE",
+     "type": "IMAGE",
+     "links": [
+      103,
+      114
+     ]
+    },
+    {
+     "name": "MASK",
+     "type": "MASK",
+     "links": [
+      116
+     ]
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "LoadImage"
+   },
+   "widgets_values": [
+    "REPLACE_ME_BASE.png"
+   ]
+  },
+  {
+   "id": 12,
+   "type": "SetLatentNoiseMask",
+   "pos": [
+    840,
+    0
+   ],
+   "size": [
+    320,
+    200
+   ],
+   "flags": {},
+   "order": 8,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "samples",
+     "type": "LATENT",
+     "link": 113
+    },
+    {
+     "name": "mask",
+     "type": "MASK",
+     "link": 112
+    }
+   ],
+   "outputs": [
+    {
+     "name": "LATENT",
+     "type": "LATENT",
+     "links": [
+      104
+     ]
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "SetLatentNoiseMask"
+   },
+   "widgets_values": []
+  },
+  {
+   "id": 13,
+   "type": "VAEEncode",
+   "pos": [
+    420,
+    460
+   ],
+   "size": [
+    320,
+    200
+   ],
+   "flags": {},
+   "order": 6,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "pixels",
+     "type": "IMAGE",
+     "link": 114
+    },
+    {
+     "name": "vae",
+     "type": "VAE",
+     "link": 115
+    }
+   ],
+   "outputs": [
+    {
+     "name": "LATENT",
+     "type": "LATENT",
+     "links": [
+      113
+     ]
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "VAEEncode"
+   },
+   "widgets_values": []
+  },
+  {
+   "id": 14,
+   "type": "GrowMask",
+   "pos": [
+    420,
+    690
+   ],
+   "size": [
+    320,
+    200
+   ],
+   "flags": {},
+   "order": 7,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "mask",
+     "type": "MASK",
+     "link": 116
+    }
+   ],
+   "outputs": [
+    {
+     "name": "MASK",
+     "type": "MASK",
+     "links": [
+      112
+     ]
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "GrowMask"
+   },
+   "widgets_values": [
+    6,
+    true
+   ]
+  },
+  {
+   "id": 15,
+   "type": "MarkdownNote",
+   "pos": [
+    0,
+    1010
+   ],
+   "size": [
+    480,
+    320
+   ],
+   "flags": {},
+   "order": 12,
+   "mode": 0,
+   "inputs": [],
+   "outputs": [],
+   "title": "Note: Inpaint int8",
+   "properties": {},
+   "widgets_values": [
+    "# Inpaint (int8) — 部分描き直し用\n\nベース画像 + マスクで指定部分だけ描き直す構成。\n\n## 推奨設定（変えないこと）\n- cfg **1.0**、`negative_prompt` は基本**空**\n- `GrowMask` (expand 6) でマスク境界をなじませている\n- ステップ数は 25（`KSamplerAdvanced`）。Pruna LoRAは使わない\n\n## 画像とマスク\n- ベース: `LoadImage`（RGB または RGBA）\n- マスク: 別ファイル or 同じ画像のアルファを使う\n  - RGBA画像なら `LoadImage` の MASK 出力を `GrowMask` に繋ぎ替え\n  - 別マスクなら `LoadImage` を追加して白黒画像を読み込む\n- `SetLatentNoiseMask` + `VAEEncode` の経路は触らない\n\n## モデル\n- UNet: `qwen_image_2.1_int8_convrot.safetensors`\n- TextEncoder: `qwen3vl_8b_int8_convrot.safetensors` (type=qwen_image)\n- VAE: `qwen_image_2.1_vae_bf16.safetensors`\n\n## 使い方\n1. ベース画像とマスクをセット\n2. `prompt` に描き直し内容を書く\n3. Queue する（**1ジョブずつ**）\n"
+   ],
+   "widgets_values_named": {
+    "text": "# Inpaint (int8) — 部分描き直し用\n\nベース画像 + マスクで指定部分だけ描き直す構成。\n\n## 推奨設定（変えないこと）\n- cfg **1.0**、`negative_prompt` は基本**空**\n- `GrowMask` (expand 6) でマスク境界をなじませている\n- ステップ数は 25（`KSamplerAdvanced`）。Pruna LoRAは使わない\n\n## 画像とマスク\n- ベース: `LoadImage`（RGB または RGBA）\n- マスク: 別ファイル or 同じ画像のアルファを使う\n  - RGBA画像なら `LoadImage` の MASK 出力を `GrowMask` に繋ぎ替え\n  - 別マスクなら `LoadImage` を追加して白黒画像を読み込む\n- `SetLatentNoiseMask` + `VAEEncode` の経路は触らない\n\n## モデル\n- UNet: `qwen_image_2.1_int8_convrot.safetensors`\n- TextEncoder: `qwen3vl_8b_int8_convrot.safetensors` (type=qwen_image)\n- VAE: `qwen_image_2.1_vae_bf16.safetensors`\n\n## 使い方\n1. ベース画像とマスクをセット\n2. `prompt` に描き直し内容を書く\n3. Queue する（**1ジョブずつ**）\n"
+   }
+  }
+ ],
+ "links": [
+  [
+   101,
+   2,
+   0,
+   4,
+   0,
+   "CLIP"
+  ],
+  [
+   102,
+   3,
+   0,
+   4,
+   2,
+   "VAE"
+  ],
+  [
+   103,
+   9,
+   0,
+   4,
+   1,
+   "IMAGE"
+  ],
+  [
+   104,
+   12,
+   0,
+   6,
+   3,
+   "LATENT"
+  ],
+  [
+   105,
+   1,
+   0,
+   6,
+   0,
+   "MODEL"
+  ],
+  [
+   106,
+   4,
+   1,
+   6,
+   2,
+   "CONDITIONING"
+  ],
+  [
+   107,
+   4,
+   0,
+   6,
+   1,
+   "CONDITIONING"
+  ],
+  [
+   108,
+   6,
+   0,
+   7,
+   0,
+   "LATENT"
+  ],
+  [
+   109,
+   3,
+   0,
+   7,
+   1,
+   "VAE"
+  ],
+  [
+   110,
+   7,
+   0,
+   8,
+   0,
+   "IMAGE"
+  ],
+  [
+   112,
+   14,
+   0,
+   12,
+   1,
+   "MASK"
+  ],
+  [
+   113,
+   13,
+   0,
+   12,
+   0,
+   "LATENT"
+  ],
+  [
+   114,
+   9,
+   0,
+   13,
+   0,
+   "IMAGE"
+  ],
+  [
+   115,
+   3,
+   0,
+   13,
+   1,
+   "VAE"
+  ],
+  [
+   116,
+   9,
+   1,
+   14,
+   0,
+   "MASK"
+  ]
+ ],
+ "groups": [],
+ "config": {},
+ "extra": {
+  "ds": {
+   "scale": 1.0,
+   "offset": [
+    0,
+    0
+   ]
+  }
+ },
+ "version": 1
+}

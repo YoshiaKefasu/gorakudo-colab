@@ -78,6 +78,13 @@ expect = {
     'vae': 'qwen_image_2.1_vae_bf16.safetensors',
     'pruna lora': 'p_qwen_image_2.1_8step_v0.1.safetensors',
     'cloudflared': 'cloudflared',
+    'tailscale default': "TUNNEL_PROVIDER = 'tailscale'",
+    'tailscale authkey': 'TAILSCALE_AUTHKEY',
+    'tailscale hostname': "TAILSCALE_HOSTNAME = 'colab-g4'",
+    'tailscale serve': "'tailscale', 'serve'",
+    'tailscale ip': "'tailscale', 'ip', '-4'",
+    'tailscale tun': '--tun=userspace-networking',
+    'stay alive': 'STAY_ALIVE = True',
     'api prompt endpoint': '/prompt',
     'api history endpoint': '/history',
     'view endpoint': '/view',
@@ -277,6 +284,18 @@ else:
             ok(f'cell5: contains {_nd}')
         else:
             fail(f'cell5 MISSING {_nd}')
+    for _nd in ('tailscale', 'TAILSCALE_AUTHKEY', 'STAY_ALIVE = True',
+                'login.tailscale.com/admin/settings/keys',
+                '--tun=userspace-networking', "'tailscale', 'ip', '-4'",
+                'Tailscale P2P'):
+        if _nd in _s5:
+            ok(f'cell5: contains {_nd}')
+        else:
+            fail(f'cell5 MISSING {_nd}')
+    if "TUNNEL_PROVIDER = 'tailscale'" in _s5:
+        ok('cell5: default provider is tailscale')
+    else:
+        fail("cell5: default TUNNEL_PROVIDER is not 'tailscale'")
     if 'ComfyUI/main.py' in _s5:
         fail('cell5: stale pkill pattern ComfyUI/main.py still present')
     else:
